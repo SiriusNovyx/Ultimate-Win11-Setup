@@ -77,6 +77,7 @@
             "intenseTextStyle": "all",
             "opacity": 80,
             "padding": "8",
+            "startingDirectory": "%USERPROFILE%",
             "useAcrylic": true
         },
         "list": 
@@ -86,6 +87,13 @@
                 "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
                 "hidden": false,
                 "name": "Windows PowerShell"
+            },
+            {
+                "commandline": "\"%ProgramFiles%\\PowerShell\\7\\pwsh.exe\"",
+                "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+                "hidden": false,
+                "icon": "ms-appx:///ProfileIcons/{574e775e-4f2a-5b96-ac1e-a2962a402336}.png",
+                "name": "PowerShell 7"
             },
             {
                 "commandline": "%SystemRoot%\\System32\\cmd.exe",
