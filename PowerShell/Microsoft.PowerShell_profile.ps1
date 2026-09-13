@@ -342,6 +342,27 @@ function listening-ports {
 }
 Set-Alias -Name ports -Value listening-ports -ErrorAction SilentlyContinue
 
+# Live real-time Fastfetch monitor (updates RAM, Uptime, CPU every second live)
+function livefetch {
+    param([int]$Interval = 1)
+    if (Get-Command fastfetch -ErrorAction SilentlyContinue) {
+        fastfetch -c "$env:USERPROFILE\.config\fastfetch\config.jsonc" --watch $Interval
+    } else {
+        Write-Warning "Fastfetch is not installed."
+    }
+}
+Set-Alias -Name watchfetch -Value livefetch -ErrorAction SilentlyContinue
+
+# Smart Clear: clears the screen and immediately renders fresh live stats
+function clear-and-fetch {
+    try { [Console]::Clear() } catch {}
+    if (Get-Command fastfetch -ErrorAction SilentlyContinue) {
+        fastfetch -c "$env:USERPROFILE\.config\fastfetch\config.jsonc"
+    }
+}
+Set-Alias -Name cls -Value clear-and-fetch -Option AllScope -Force -ErrorAction SilentlyContinue
+Set-Alias -Name clear -Value clear-and-fetch -Option AllScope -Force -ErrorAction SilentlyContinue
+
 # Quick process kill by name
 function pskill {
     param([Parameter(Mandatory=$true)][string]$Name)
