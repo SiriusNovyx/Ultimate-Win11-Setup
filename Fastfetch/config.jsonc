@@ -1,68 +1,61 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
   "logo": {
-    "type": "file",
-    "source": "C:/Users/%USERPROFILE%/.config/fastfetch/ascii.txt",
+    "type": "file",                                  // "file" processes $1-$9; use "file-raw" for plain art
+    "source": "~/.config/fastfetch/ascii.txt",       // FIXED: was doubling the C:/Users prefix
     "color": {
-      "1": "#F5E0DC",
-      "2": "#F2CDCD",
-      "3": "#F5C2E7",
-      "4": "#FAB387",
-      "5": "#F9E2AF",
-      "6": "#A6E3A1",
-      "7": "#94E2D5",
-      "8": "#89DCEB",
-      "9": "#74C7EC"
+      "1": "#F5E0DC",  // rosewater
+      "2": "#F2CDCD",  // flamingo
+      "3": "#F5C2E7",  // pink
+      "4": "#FAB387",  // peach
+      "5": "#F9E2AF",  // yellow
+      "6": "#A6E3A1",  // green
+      "7": "#94E2D5",  // teal
+      "8": "#89DCEB",  // sky
+      "9": "#74C7EC"   // sapphire
     },
-    "padding": {
-      "top": 1,
-      "right": 3
-    }
+    "padding": { "top": 1, "left": 2, "right": 4 }
   },
+
   "display": {
-    "separator": " "
+    "separator": "  ",
+    "color": { "title": "#F5C2E7" },
+    "percent": { "type": 9 },                        // number + auto green/yellow/red coloring
+    "size": { "maxPrefix": "GB", "ndigits": 1 }
   },
+
   "modules": [
     "break",
     {
       "type": "title",
-      "color": {
-        "user": "#F5C2E7",
-        "at": "#CDD6F4",
-        "host": "#89DCEB"
-      }
+      "color": { "user": "#F5C2E7", "at": "#6C7086", "host": "#89DCEB" }
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;2;108;112;134m────────────────────────────"
     },
     "break",
-    {
-      "type": "os",
-      "key": "",
-      "keyColor": "#89DCEB"
-    },
-    {
-      "type": "cpu",
-      "key": "",
-      "keyColor": "#F5C2E7"
-    },
-    {
-      "type": "board",
-      "key": "󰚗",
-      "keyColor": "#FAB387"
-    },
-    {
-      "type": "memory",
-      "key": "",
-      "keyColor": "#A6E3A1",
-      "format": "{used} / {total} ({percentage})"
-    },
-    {
-      "type": "disk",
-      "key": "",
-      "keyColor": "#94E2D5"
-    },
+
+    { "type": "os",       "key": "",  "keyColor": "#89DCEB" },
+    { "type": "kernel",   "key": "󰌽",  "keyColor": "#89B4FA", "format": "{release}" },
+    { "type": "board",    "key": "󰚗",  "keyColor": "#FAB387" },
+    { "type": "uptime",   "key": "󰅐",  "keyColor": "#CBA6F7" },
+    { "type": "packages", "key": "󰏖",  "keyColor": "#F38BA8" },
     "break",
-    {
-      "type": "colors",
-      "symbol": "circle"
-    }
+
+    { "type": "cpu",      "key": "󰻠",  "keyColor": "#F5C2E7", "showPeCoreCount": true },
+    { "type": "gpu",      "key": "󰢮",  "keyColor": "#CBA6F7", "format": "{name}" },
+    { "type": "memory",   "key": "󰍛",  "keyColor": "#A6E3A1" },
+    { "type": "disk",     "key": "󰋊",  "keyColor": "#94E2D5", "folders": "C:" },
+    { "type": "display",  "key": "󰍹",  "keyColor": "#F9E2AF", "compactType": "original" },
+    "break",
+
+    { "type": "shell",    "key": "󰞷",  "keyColor": "#F2CDCD" },
+    { "type": "terminal", "key": "",  "keyColor": "#F5E0DC" },
+    "break",
+
+    { "type": "colors", "symbol": "circle", "paddingLeft": 3 },
+    "break"
   ]
 }
