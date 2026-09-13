@@ -60,15 +60,156 @@ if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {
             InlinePrediction   = "$esc[38;2;108;112;134m"  # Muted Gray-Blue
         }
 
-        # Predictive IntelliSense (supported on PSReadLine 2.2+)
+        # Predictive IntelliSense (supports History + Plugins on PSReadLine 2.2+)
         $psr = Get-Module PSReadLine
         if ($psr -and $psr.Version -ge [Version]'2.2.0') {
-            Set-PSReadLineOption -PredictionSource History
-            Set-PSReadLineOption -PredictionViewStyle InlineView
+            try {
+                Set-PSReadLineOption -PredictionSource HistoryAndPlugin -ErrorAction Stop
+            } catch {
+                try { Set-PSReadLineOption -PredictionSource History } catch {}
+            }
+            try { Set-PSReadLineOption -PredictionViewStyle InlineView } catch {}
+
+            # Auto-type keybindings:
+            # RightArrow: accept full suggestion
+            Set-PSReadLineKeyHandler -Key RightArrow -Function ForwardChar
+            # Ctrl+f or Ctrl+RightArrow: auto-type word-by-word (accepts next word)
+            Set-PSReadLineKeyHandler -Key "Ctrl+f" -Function ForwardWord
+            Set-PSReadLineKeyHandler -Key "Ctrl+RightArrow" -Function ForwardWord
+            # Ctrl+Space: open completion menu
+            Set-PSReadLineKeyHandler -Key "Ctrl+Space" -Function MenuComplete
+            # F2: toggle between inline ghost text and interactive dropdown list
+            Set-PSReadLineKeyHandler -Key F2 -Function SwitchPredictionView
+
+            # Quick Auto-Type snippet chords:
+            # Alt+g -> auto-types 'git status'
+            Set-PSReadLineKeyHandler -Chord "Alt+g" -ScriptBlock {
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert("git status")
+            }
+            # Alt+c -> auto-types 'code .'
+            Set-PSReadLineKeyHandler -Chord "Alt+c" -ScriptBlock {
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert("code .")
+            }
+            # Alt+u -> auto-types 'uv run '
+            Set-PSReadLineKeyHandler -Chord "Alt+u" -ScriptBlock {
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert("uv run ")
+            }
         }
 
         Set-PSReadLineOption -Colors $syntaxColors
+
+        # Pre-seed popular developer commands so Auto-Type can suggest them immediately
+        try {
+            $histFile = (Get-PSReadLineOption).HistorySavePath
+            if ($histFile) {
+                $histDir = Split-Path $histFile
+                if (-not (Test-Path $histDir)) { New-Item -ItemType Directory -Path $histDir -Force | Out-Null }
+                $starterSeeds = @(
+                    'git status',
+                    'git add -A',
+                    'git commit -m "update"',
+                    'git push origin main',
+                    'git pull --rebase',
+                    'git log --oneline -n 10',
+                    'winget upgrade --all',
+                    'winget search',
+                    'uv pip install -r requirements.txt',
+                    'python -m venv .venv',
+                    'npm run dev',
+                    'npm install',
+                    'code .',
+                    'fastfetch -c "$env:USERPROFILE\.config\fastfetch\config.jsonc"'
+                )
+                if (-not (Test-Path $histFile)) {
+                    $starterSeeds | Out-File -FilePath $histFile -Encoding utf8
+                } else {
+                    $existing = Get-Content $histFile -ErrorAction SilentlyContinue
+                    $toAdd = $starterSeeds | Where-Object { $_ -notin $existing }
+                    if ($toAdd) {
+                        $toAdd | Out-File -FilePath $histFile -Append -Encoding utf8
+                    }
+                }
+            }
+        } catch {}
     } catch {}
+}
+
+# ------------------------------------------------------------------------------
+# 3.1 Smart Argument Completers (Auto-Type CLI Commands & Arguments)
+# ------------------------------------------------------------------------------
+
+# Git Completer: Auto-types Git subcommands, options & local/remote branches
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $script:gitSubcommands = @(
+        'add', 'bisect', 'branch', 'checkout', 'clone', 'commit', 'diff',
+        'fetch', 'grep', 'init', 'log', 'merge', 'mv', 'pull', 'push',
+        'rebase', 'reset', 'restore', 'revert', 'rm', 'show', 'status',
+        'switch', 'tag', 'stash'
+    )
+    Register-ArgumentCompleter -Native -CommandName git -ScriptBlock {
+        param($wordToComplete, $commandAst, $cursorPosition)
+        $elements = $commandAst.CommandElements
+        if ($elements.Count -le 2) {
+            $script:gitSubcommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Git command: $_")
+            }
+        } elseif ($elements[1].Value -in @('checkout', 'switch', 'branch', 'merge', 'rebase', 'pull', 'diff', 'log')) {
+            git branch --format='%(refname:short)' 2>$null | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Branch: $_")
+            }
+        }
+    }
+}
+
+# Winget Completer: Auto-types winget commands and options
+if (Get-Command winget -ErrorAction SilentlyContinue) {
+    Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
+        param($wordToComplete, $commandAst, $cursorPosition)
+        $subcommands = @('install', 'show', 'source', 'search', 'list', 'upgrade', 'uninstall', 'hash', 'validate', 'settings', 'features', 'export', 'import', 'pin')
+        $options = @('--id', '--name', '--exact', '-e', '--source', '-s', '--scope', '--silent', '-h', '--force', '--all')
+        if ($wordToComplete.StartsWith('-')) {
+            $options | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            }
+        } else {
+            $subcommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            }
+        }
+    }
+}
+
+# uv Completer: Auto-types uv subcommands
+if (Get-Command uv -ErrorAction SilentlyContinue) {
+    $script:uvCommands = @('run', 'init', 'add', 'remove', 'lock', 'sync', 'tree', 'pip', 'venv', 'python', 'tool', 'cache', 'help')
+    Register-ArgumentCompleter -Native -CommandName uv -ScriptBlock {
+        param($wordToComplete, $commandAst, $cursorPosition)
+        $script:uvCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "uv: $_")
+        }
+    }
+}
+
+# npm Completer: Auto-types npm scripts & commands
+if (Get-Command npm -ErrorAction SilentlyContinue) {
+    $script:npmCommands = @('run', 'install', 'i', 'test', 'build', 'start', 'dev', 'publish', 'update', 'audit', 'init')
+    Register-ArgumentCompleter -Native -CommandName npm -ScriptBlock {
+        param($wordToComplete, $commandAst, $cursorPosition)
+        $script:npmCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "npm: $_")
+        }
+    }
+}
+
+# Docker Completer: Auto-types docker commands
+if (Get-Command docker -ErrorAction SilentlyContinue) {
+    $script:dockerCommands = @('ps', 'run', 'exec', 'build', 'compose', 'logs', 'stop', 'start', 'restart', 'pull', 'push', 'images', 'rm', 'rmi')
+    Register-ArgumentCompleter -Native -CommandName docker -ScriptBlock {
+        param($wordToComplete, $commandAst, $cursorPosition)
+        $script:dockerCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "docker: $_")
+        }
+    }
 }
 
 # ------------------------------------------------------------------------------
@@ -279,4 +420,54 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     function gd  { git diff @args }
     function gco { git checkout @args }
     function gb  { git branch @args }
+}
+
+# ------------------------------------------------------------------------------
+# 9. Auto-Correction Engine (Common Typos & CommandNotFoundAction)
+# ------------------------------------------------------------------------------
+
+# Direct typo wrappers for instant execution without error
+function cd..   { Set-Location .. }
+function cd/    { Set-Location \ }
+function cd\    { Set-Location \ }
+function dc     { Set-Location @args }
+function claer  { Clear-Host }
+function clr    { Clear-Host }
+function pyhton { python @args }
+function pythno { python @args }
+function npn    { npm @args }
+function coce   { code @args }
+
+# Smart dynamic auto-correction hook for mistyped commands
+$ExecutionContext.InvokeCommand.CommandNotFoundAction = {
+    param($commandName, $eventArgs)
+
+    $typoMap = @{
+        'gti'       = 'git'
+        'gut'       = 'git'
+        'got'       = 'git'
+        'gi'        = 'git'
+        'claer'     = 'clear'
+        'clea'      = 'clear'
+        'clr'       = 'clear'
+        'pyhton'    = 'python'
+        'pythno'    = 'python'
+        'npn'       = 'npm'
+        'coce'      = 'code'
+        'cdoe'      = 'code'
+        'fastfech'  = 'fastfetch'
+        'fatsfetch' = 'fastfetch'
+        'pwsh7'     = 'pwsh'
+    }
+
+    $cmdLower = $commandName.ToLower()
+    if ($typoMap.ContainsKey($cmdLower)) {
+        $target = $typoMap[$cmdLower]
+        $cmd = Get-Command $target -ErrorAction SilentlyContinue
+        if ($cmd) {
+            $esc = [char]27
+            Write-Host "$esc[38;2;250;179;135m[Auto-Correct]$esc[0m Running '$target' instead of '$commandName'..." -ForegroundColor Yellow
+            $eventArgs.Command = $cmd
+        }
+    }
 }
