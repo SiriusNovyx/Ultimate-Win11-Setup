@@ -53,7 +53,7 @@ A highly configurable Windows status bar written in Python.
 **⚙️ Installation:**  
 You can follow the steps below, or jump to the [**setup video**](https://www.youtube.com/watch?v=your-video-id).
 - Install [**YASB**]([(https://github.com/amnweb/yasb)])   
-- Copy the config files from [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/YASB).
+- Copy the config files from [**here**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/YASB).
 - Remove the codes from **your** YASB config and paste the one you just copied.
 - Restart **YASB** for the changes to take effect.
 
@@ -68,7 +68,7 @@ GlazeWM lets you easily organize windows and adjust their layout on the fly by u
 **⚙️ Installation:**  
 You can follow the steps below, or jump to the [**setup video**](https://youtu.be/b57zFm3nVxA).
 - Install [**GlazeWM**](https://github.com/glzr-io/glazewm)   
-- Copy the config file from [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/GlazeWM).
+- Copy the config file from [**here**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/GlazeWM).
 - Remove the codes from **your** GlazeWM config and paste the one you just copied.
 - Restart **GlazeWM** for the changes to take effect.
 
@@ -83,7 +83,7 @@ Windhawk aims to make it easier to customize Windows programs.
 **⚙️ Installation:**  
 You can follow the steps below, or jump to the [**setup video**](https://youtu.be/b57zFm3nVxA) if you wanna know more about the taskbar.
 - Install [**Windhawk**](https://windhawk.net/)   
-- Copy the config file from [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Windhawk).
+- Copy the config file from [**here**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Windhawk).
 - Remove the codes from the advance section in **your** Windhawk mod and paste the one you just copied.
 - Click **Save settings** for the changes to take effect.
 
@@ -96,7 +96,7 @@ Quick File Search & App Launcher for Windows
 **⚙️ Installation:**  
 You can follow the steps below,
 - Install [**Flow Launcher**](https://www.flowlauncher.com/).
-- Download the theme file from [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Flow%20Launcher).
+- Download the theme file from [**here**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Flow%20Launcher).
 - Open Flow Launcher's Settings window, select **Appearance** on the sidebar, and click the "Open Theme Folder" button at the bottom.
 - Move your theme file downloaded in Step 1 to this directory, and restart Flow Launcher.
 - Again in Flow Launcher's Settings window, select **Appearance** on the sidebar, and select your Catppuccin flavor from the list of themes.
@@ -113,32 +113,61 @@ Add background Blur effect or Acrylic or Mica effect to explorer for win10 and w
 **⚙️ Installation:**  
 You can follow the steps below, or jump to the [**setup video**](https://youtu.be/gpGeCZXXsbs).
 - Install [**ExplorerBlurMica**](https://github.com/Maplespe/ExplorerBlurMica/releases)   
-- Copy the config file from [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/File%20Explorer).
+- Copy the config file from [**here**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/File%20Explorer).
 - For the next part, I'm using the default stuff so just follow the installation from [**here**](https://github.com/Maplespe/ExplorerBlurMica?tab=readme-ov-file#install) 
 
 ---
 
 ## 👾 Terminal + Fastfetch
-> [!NOTE] 
-> If you just wanna fully use it just like I'm using then I recommend watchng the video. If you just want the config for Fastfetch then just paste the config where **your** Fastfetch config is located. If you have a PowerShell profile then just add your location and other stuff in your profile yourself as idk what you got.
->
-> If you see **"execution of scripts is disabled on this system"**, don’t panic! Just open PowerShell as Administrator and run: 
-> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force`
->
-> Also if you notice that the ASCII art is not showing then try editing `"source": "C:/Users/%USERPROFILE%/.config/fastfetch/ascii.txt"` to `"source": "%USERPROFILE%/.config/fastfetch/ascii.txt"`. That should fix it. [**Credits**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/issues/1#issue-3498937609).
->
-> If you want to add FastFetch to CMD as well, then please check out this [**issue**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/issues/9#issue-3958846174). Big thanks to [**Augtive85YT**](https://github.com/Augtive85YT).
- 
-Fastfetch is a neofetch-like tool for fetching system information and displaying it in a visually appealing way. It is written mainly in C, with a focus on performance and customizability.
 
-**⚙️ Installation:**  
-You can follow the steps below, or jump to the [**setup video**](https://youtu.be/z3NpVq-y6jU) if you want your terminal to look 1:1 to mine.
-- Install [**Fastfetch**](https://github.com/fastfetch-cli/fastfetch/releases) and I believe you already got the **Windows terminal** installed.
-- Copy the config file for your Terminal [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Terminal), PowerShell profile from [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/PowerShell) and Fastfetch config from [**here**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Fastfetch)
-- Remove the codes from the settings.json file in **your terminal** and paste the one you just copied from above. Do the same thing for your PowerShell profile.
-- Create a **.config** *hidden* file in your C:\Users\%USERPROFILE% and create a folder called **fastfetch** inside. Copy the config and ascii code you just downloaded and paste it in that folder.
-- Change the %USERPROFILE% from the config file in the fastfetch folder and the PowerShell profile with **your username**..
-- Restart your terminal and your done. If this feel complicated just watch the [**setup video**](https://youtu.be/z3NpVq-y6jU).
+> [!NOTE]
+> If you want a 1:1 replica of my setup, I recommend following the [**Setup Video**](https://youtu.be/z3NpVq-y6jU). If you only want the Fastfetch aesthetic, simply drop the config into your existing Fastfetch directory. If you already have an existing PowerShell profile, merge the contents rather than overwriting what you already have.
+
+> [!IMPORTANT]
+> **Font Requirement**: To render all icons properly without broken boxes or missing glyphs, install and select a Nerd Font in Windows Terminal (e.g., [**JetBrainsMono Nerd Font**](https://www.nerdfonts.com/font-downloads)).
+
+> [!TIP]
+> * **Script Execution Error**: If you see `"execution of scripts is disabled on this system"`, open PowerShell as Administrator and run:
+>   ```powershell
+>   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+>   ```
+> * **ASCII Art Not Showing?** Ensure the source path in `config.jsonc` points to `"~/.config/fastfetch/ascii.txt"` rather than a doubled `C:/Users/...` path. ([**Credits**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/issues/1#issue-3498937609)).
+> * **Add Fastfetch to CMD**: Want Fastfetch on Command Prompt too? Check out this [**guide / issue**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/issues/9#issue-3958846174) (Big thanks to [**Augtive85YT**](https://github.com/Augtive85YT)!).
+
+---
+
+## Fastfetch is a modern, high-performance `neofetch`-like system information tool written in C, built for speed and deep visual customization.
+
+### ⚙️ Installation & Setup
+
+Follow the steps below, or follow along with the [**Setup Video**](https://youtu.be/z3NpVq-y6jU).
+
+1. **Install Prerequisites**:
+   * Install [**Fastfetch**](https://github.com/fastfetch-cli/fastfetch/releases) (via installer or `winget install Fastfetch-cli.Fastfetch`).
+   * Ensure [**Windows Terminal**](https://apps.microsoft.com/detail/9n0dx20hk701) and [**JetBrainsMono Nerd Font**](https://www.nerdfonts.com/font-downloads) are installed.
+
+2. **Download Configurations**:
+   * [**Windows Terminal (`settings.json`)**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Terminal)
+   * [**PowerShell Profile (`Microsoft.PowerShell_profile.ps1`)**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/PowerShell)
+   * [**Fastfetch Configuration & ASCII Art**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Fastfetch)
+
+3. **Deploy the Configs**:
+   * **Windows Terminal**: Open Windows Terminal Settings (`Ctrl + ,`), click the bottom-left gear icon to **Open JSON file**, and replace or merge its contents with the downloaded `settings.json`.
+   * **PowerShell Profile**: In PowerShell, type `notepad $PROFILE`. If prompted to create the file, click **Yes**, and paste the profile code.
+   * **Fastfetch Config**:
+     * Navigate to `%USERPROFILE%` (e.g., `C:\Users\<YourUsername>`).
+     * Create a `.config` folder if it doesn't already exist, and create a `fastfetch` subfolder inside:
+       ```
+       %USERPROFILE%\.config\fastfetch\
+       ```
+     * Place your `config.jsonc` and `ascii.txt` into that directory.
+
+4. **Verify Paths**:
+   * Open `config.jsonc` and ensure the logo source path reads:
+     ```jsonc
+     "source": "~/.config/fastfetch/ascii.txt"
+     ```
+   * Restart Windows Terminal and you're all set!
 
 ---
 
