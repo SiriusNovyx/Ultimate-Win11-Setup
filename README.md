@@ -136,7 +136,7 @@ You can follow the steps below, or jump to the [**setup video**](https://youtu.b
 
 ---
 
-## Fastfetch is a modern, high-performance `neofetch`-like system information tool written in C, built for speed and deep visual customization.
+Fastfetch is a modern, high-performance `neofetch`-like system information tool written in C, built for speed and deep visual customization.
 
 ### ⚙️ Installation & Setup
 
