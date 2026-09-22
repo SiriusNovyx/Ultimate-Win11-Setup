@@ -492,3 +492,182 @@ $ExecutionContext.InvokeCommand.CommandNotFoundAction = {
         }
     }
 }
+
+# ------------------------------------------------------------------------------
+# 10. High-Utility Everyday Tools (killport, bak/unbak, extract, cb/paste)
+# ------------------------------------------------------------------------------
+
+# Kill process listening on a specific port (e.g. killport 3000)
+function killport {
+    param([Parameter(Mandatory=$true)][int]$Port)
+    $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+    if (-not $connections) {
+        Write-Host "No process found listening on port $Port." -ForegroundColor Cyan
+        return
+    }
+
+    $pids = $connections | Select-Object -ExpandProperty OwningProcess -Unique | Where-Object { $_ -gt 0 }
+    foreach ($p in $pids) {
+        try {
+            $proc = Get-Process -Id $p -ErrorAction Stop
+            $procName = $proc.ProcessName
+            Stop-Process -Id $p -Force -ErrorAction Stop
+            Write-Host "[killport] Terminated process '$procName' (PID: $p) on port $Port." -ForegroundColor Green
+        } catch {
+            Write-Warning "[killport] Failed to stop process with PID ${p}: $_"
+        }
+    }
+}
+
+# Timestamped backup creator
+function bak {
+    param([Parameter(Mandatory=$true)][string]$Path)
+    if (-not (Test-Path $Path)) {
+        Write-Error "File not found: $Path"
+        return
+    }
+    $timestamp = (Get-Date).ToString("yyyyMMdd_HHmmss")
+    $item = Get-Item $Path
+    $bakName = "$($item.FullName).$timestamp.bak"
+    Copy-Item -Path $item.FullName -Destination $bakName
+    Write-Host "[bak] Created backup: $bakName" -ForegroundColor Green
+}
+
+# Restore file from the most recent backup
+function unbak {
+    param([Parameter(Mandatory=$true)][string]$Path)
+    $resolvedPath = if (Test-Path $Path) { (Get-Item $Path).FullName } else { $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path) }
+    $dir = Split-Path $resolvedPath -Parent
+    $fileName = Split-Path $resolvedPath -Leaf
+
+    $latestBak = Get-ChildItem -Path $dir -Filter "$fileName.*.bak" -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if (-not $latestBak) {
+        if (Test-Path "$resolvedPath.bak") {
+            $latestBak = Get-Item "$resolvedPath.bak"
+        } else {
+            Write-Error "No backup found for: $Path"
+            return
+        }
+    }
+
+    Copy-Item -Path $latestBak.FullName -Destination $resolvedPath -Force
+    Write-Host "[unbak] Restored '$resolvedPath' from '$($latestBak.Name)'." -ForegroundColor Green
+}
+
+# Universal archive extractor
+function extract {
+    param([Parameter(Mandatory=$true)][string]$Archive)
+    if (-not (Test-Path $Archive)) {
+        Write-Error "Archive not found: $Archive"
+        return
+    }
+    $fullPath = (Get-Item $Archive).FullName
+    $ext = [System.IO.Path]::GetExtension($fullPath).ToLower()
+
+    switch ($ext) {
+        '.zip' {
+            Expand-Archive -Path $fullPath -DestinationPath . -Force
+            Write-Host "[extract] Extracted '$Archive' with Expand-Archive." -ForegroundColor Green
+        }
+        { $_ -in '.tar', '.gz', '.tgz', '.bz2', '.xz' } {
+            tar -xvf $fullPath
+            Write-Host "[extract] Extracted '$Archive' with tar." -ForegroundColor Green
+        }
+        '.7z' {
+            if (Get-Command 7z -ErrorAction SilentlyContinue) {
+                7z x $fullPath
+            } else {
+                tar -xvf $fullPath
+            }
+            Write-Host "[extract] Extracted '$Archive'." -ForegroundColor Green
+        }
+        default {
+            tar -xvf $fullPath
+        }
+    }
+}
+
+# Pipeline and file-aware clipboard copy
+function cb {
+    param(
+        [Parameter(ValueFromPipeline=$true)]
+        $InputObject,
+        [Parameter(Position=0)]
+        [string]$Path
+    )
+    process {
+        if ($Path -and (Test-Path $Path)) {
+            Get-Content -Path $Path -Raw | Set-Clipboard
+            Write-Host "[cb] Copied contents of '$Path' to clipboard." -ForegroundColor Green
+        } elseif ($Path) {
+            Set-Clipboard -Value $Path
+            Write-Host "[cb] Copied text to clipboard." -ForegroundColor Green
+        } elseif ($InputObject) {
+            $InputObject | Out-String | Set-Clipboard
+            Write-Host "[cb] Copied piped input to clipboard." -ForegroundColor Green
+        }
+    }
+}
+
+# Output clipboard contents to stdout
+function paste {
+    Get-Clipboard
+}
+Set-Alias -Name pbcopy -Value cb -ErrorAction SilentlyContinue
+Set-Alias -Name pbpaste -Value paste -ErrorAction SilentlyContinue
+
+# ------------------------------------------------------------------------------
+# 11. Smart Directory Navigation (Zoxide with Graceful Fallback)
+# ------------------------------------------------------------------------------
+if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+    Invoke-Expression (& { (zoxide init powershell | Out-String) })
+} else {
+    function z {
+        Write-Host "[zoxide] 'z' requires zoxide for smart directory jumping." -ForegroundColor Yellow
+        Write-Host "Install it with: winget install ajeetdsouza.zoxide (or run 'install-tools')" -ForegroundColor Cyan
+        if ($args -and (Test-Path $args[0])) {
+            Set-Location $args[0]
+        }
+    }
+    function zi {
+        Write-Host "[zoxide] 'zi' requires zoxide. Install with: winget install ajeetdsouza.zoxide" -ForegroundColor Yellow
+    }
+}
+
+# ------------------------------------------------------------------------------
+# 12. Environment Tool Check & Automated Setup
+# ------------------------------------------------------------------------------
+
+# Check status of recommended terminal tools
+function check-tools {
+    $tools = [ordered]@{
+        'Fastfetch'  = 'fastfetch'
+        'Zoxide'     = 'zoxide'
+        'Git'        = 'git'
+        'Ripgrep'    = 'rg'
+        'uv'         = 'uv'
+        'btop'       = 'btop'
+    }
+    $esc = [char]27
+    Write-Host "`n$esc[38;2;137;220;235m=== Terminal Tools Checklist ===$esc[0m"
+    foreach ($name in $tools.Keys) {
+        $cmd = $tools[$name]
+        if (Get-Command $cmd -ErrorAction SilentlyContinue) {
+            Write-Host " $esc[38;2;166;227;161m[OK]$esc[0m      $name"
+        } else {
+            Write-Host " $esc[38;2;243;139;168m[MISSING]$esc[0m $name (Install: winget install $name)"
+        }
+    }
+    Write-Host ""
+}
+
+# Automated one-step installer for core tools
+function install-tools {
+    Write-Host "Installing recommended terminal utilities via WinGet..." -ForegroundColor Cyan
+    winget install --id Fastfetch-cli.Fastfetch --source winget --accept-package-agreements --accept-source-agreements
+    winget install --id ajeetdsouza.zoxide --source winget --accept-package-agreements --accept-source-agreements
+    Write-Host "Installation complete! Restart your terminal or run 'reload' to refresh." -ForegroundColor Green
+}
