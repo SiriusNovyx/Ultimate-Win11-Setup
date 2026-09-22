@@ -400,19 +400,33 @@ function venv-activate {
 Set-Alias -Name activate -Value venv-activate -ErrorAction SilentlyContinue
 
 # Profile management shortcuts
+function Get-ActiveProfilePath {
+    if (Test-Path $PROFILE) { return $PROFILE }
+    $master = "$HOME\OneDrive\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+    if (Test-Path $master) { return $master }
+    if ($PROFILE.CurrentUserAllHosts -and (Test-Path $PROFILE.CurrentUserAllHosts)) { return $PROFILE.CurrentUserAllHosts }
+    return $PROFILE
+}
+
 function reload-profile {
-    & $PROFILE
-    Write-Host "Profile reloaded successfully!" -ForegroundColor Green
+    $target = Get-ActiveProfilePath
+    if (Test-Path $target) {
+        . $target
+        Write-Host "Profile reloaded successfully!" -ForegroundColor Green
+    } else {
+        Write-Warning "Profile not found at: $target"
+    }
 }
 Set-Alias -Name reload -Value reload-profile -ErrorAction SilentlyContinue
 
 function edit-profile {
+    $target = Get-ActiveProfilePath
     if (Get-Command code -ErrorAction SilentlyContinue) {
-        code $PROFILE
+        code $target
     } elseif (Get-Command notepad -ErrorAction SilentlyContinue) {
-        notepad $PROFILE
+        notepad $target
     } else {
-        $PROFILE
+        Invoke-Item $target
     }
 }
 Set-Alias -Name ep -Value edit-profile -ErrorAction SilentlyContinue
