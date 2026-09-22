@@ -136,8 +136,8 @@ You can follow the steps below, or jump to the [**setup video**](https://youtu.b
 >   ```powershell
 >   winget install Fastfetch-cli.Fastfetch ajeetdsouza.zoxide
 >   ```
-> * **ASCII Art Not Showing?** Ensure the source path in `config.jsonc` points to `"~/.config/fastfetch/ascii.txt"` rather than a doubled `C:/Users/...` path. ([**Credits**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/issues/1#issue-3498937609)).
-> * **Add Fastfetch to CMD**: Want Fastfetch on Command Prompt too? Check out this [**guide / issue**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/issues/9#issue-3958846174) (Big thanks to [**Augtive85YT**](https://github.com/Augtive85YT)!).
+> * **ASCII Art Not Showing?** Ensure the source path in `config.jsonc` points to `"~/.config/fastfetch/ascii.txt"` rather than a doubled `C:/Users/...` path. ([**Credits**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/issues/1#issue-3498937609)).
+> * **Add Fastfetch to CMD**: Want Fastfetch on Command Prompt too? Check out this [**guide / issue**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/issues/9#issue-3958846174) (Big thanks to [**Augtive85YT**](https://github.com/Augtive85YT)!).
 
 ---
 
@@ -152,9 +152,9 @@ Follow the steps below, or follow along with the [**Setup Video**](https://youtu
    * Ensure [**Windows Terminal**](https://apps.microsoft.com/detail/9n0dx20hk701) and [**JetBrainsMono Nerd Font**](https://www.nerdfonts.com/font-downloads) are installed.
 
 2. **Download Configurations**:
-   * [**Windows Terminal (`settings.json`)**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Terminal)
-   * [**PowerShell Profile (`Microsoft.PowerShell_profile.ps1`)**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/PowerShell)
-   * [**Fastfetch Configuration & ASCII Art**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Fastfetch)
+   * [**Windows Terminal (`settings.json`)**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Terminal)
+   * [**PowerShell Profile (`Microsoft.PowerShell_profile.ps1`)**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/PowerShell)
+   * [**Fastfetch Configuration & ASCII Art**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Fastfetch)
 
 3. **Deploy the Configs**:
    * **Windows Terminal**: Open Windows Terminal Settings (`Ctrl + ,`), click the bottom-left gear icon to **Open JSON file**, and replace or merge its contents with the downloaded `settings.json`.
