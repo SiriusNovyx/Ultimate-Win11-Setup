@@ -120,19 +120,24 @@ You can follow the steps below, or jump to the [**setup video**](https://youtu.b
 
 ## 👾 Terminal + Fastfetch
 
-> [!NOTE]
+> [!NOTE] 
 > If you want a 1:1 replica of my setup, I recommend following the [**Setup Video**](https://youtu.be/z3NpVq-y6jU). If you only want the Fastfetch aesthetic, simply drop the config into your existing Fastfetch directory. If you already have an existing PowerShell profile, merge the contents rather than overwriting what you already have.
 
 > [!IMPORTANT]
 > **Font Requirement**: To render all icons properly without broken boxes or missing glyphs, install and select a Nerd Font in Windows Terminal (e.g., [**JetBrainsMono Nerd Font**](https://www.nerdfonts.com/font-downloads)).
 
 > [!TIP]
-> * **Script Execution Error**: If you see `"execution of scripts is disabled on this system"`, open PowerShell as Administrator and run:
+> * **Script Execution Error**: If you see `"execution of scripts is disabled on this system"`, open PowerShell as Administrator and run: 
 >   ```powershell
 >   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 >   ```
-> * **ASCII Art Not Showing?** Ensure the source path in `config.jsonc` points to `"~/.config/fastfetch/ascii.txt"` rather than a doubled `C:/Users/...` path. ([**Credits**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/issues/1#issue-3498937609)).
-> * **Add Fastfetch to CMD**: Want Fastfetch on Command Prompt too? Check out this [**guide / issue**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/issues/9#issue-3958846174) (Big thanks to [**Augtive85YT**](https://github.com/Augtive85YT)!).
+> * **1-Command Tool Installer**: Once you've loaded this profile, you can simply type `install-tools` to automatically install Fastfetch and Zoxide, or type `check-tools` to view your setup status.
+> * **Manual Tool Installation**: You can also install the recommended packages manually via WinGet:
+>   ```powershell
+>   winget install Fastfetch-cli.Fastfetch ajeetdsouza.zoxide
+>   ```
+> * **ASCII Art Not Showing?** Ensure the source path in `config.jsonc` points to `"~/.config/fastfetch/ascii.txt"` rather than a doubled `C:/Users/...` path. ([**Credits**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/issues/1#issue-3498937609)).
+> * **Add Fastfetch to CMD**: Want Fastfetch on Command Prompt too? Check out this [**guide / issue**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/issues/9#issue-3958846174) (Big thanks to [**Augtive85YT**](https://github.com/Augtive85YT)!).
 
 ---
 
@@ -143,13 +148,13 @@ Fastfetch is a modern, high-performance `neofetch`-like system information tool 
 Follow the steps below, or follow along with the [**Setup Video**](https://youtu.be/z3NpVq-y6jU).
 
 1. **Install Prerequisites**:
-   * Install [**Fastfetch**](https://github.com/fastfetch-cli/fastfetch/releases) (via installer or `winget install Fastfetch-cli.Fastfetch`).
+   * Install [**Fastfetch**](https://github.com/fastfetch-cli/fastfetch/releases) and [**Zoxide**](https://github.com/ajeetdsouza/zoxide) (`winget install Fastfetch-cli.Fastfetch ajeetdsouza.zoxide`).
    * Ensure [**Windows Terminal**](https://apps.microsoft.com/detail/9n0dx20hk701) and [**JetBrainsMono Nerd Font**](https://www.nerdfonts.com/font-downloads) are installed.
 
 2. **Download Configurations**:
-   * [**Windows Terminal (`settings.json`)**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Terminal)
-   * [**PowerShell Profile (`Microsoft.PowerShell_profile.ps1`)**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/PowerShell)
-   * [**Fastfetch Configuration & ASCII Art**](https://github.com/SiriusNovyx/Ultimate-Win11-Setup/tree/main/Fastfetch)
+   * [**Windows Terminal (`settings.json`)**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Terminal)
+   * [**PowerShell Profile (`Microsoft.PowerShell_profile.ps1`)**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/PowerShell)
+   * [**Fastfetch Configuration & ASCII Art**](https://github.com/SleepyCatHey/Ultimate-Win11-Setup/tree/main/Fastfetch)
 
 3. **Deploy the Configs**:
    * **Windows Terminal**: Open Windows Terminal Settings (`Ctrl + ,`), click the bottom-left gear icon to **Open JSON file**, and replace or merge its contents with the downloaded `settings.json`.
