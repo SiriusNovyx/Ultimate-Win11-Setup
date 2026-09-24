@@ -2,6 +2,24 @@
 # PowerShell Profile - Catppuccin Aesthetic & Modern Productivity
 # Target: Microsoft.PowerShell_profile.ps1 (Compatible with PS 5.1 and PS 7+)
 # ==============================================================================
+# ------------------------------------------------------------------------------
+# 0. Bootstrap: Section Timing + Version Stamp
+# ------------------------------------------------------------------------------
+# Tracks how long each numbered section below takes to load. Run 'profile-timing'
+# after the shell starts to see a per-section breakdown (see section 12 for the
+# command itself, defined once the rest of the profile has been sourced).
+$script:profileTimes = [ordered]@{}
+$script:profileSectionWatch = [System.Diagnostics.Stopwatch]::StartNew()
+function script:Mark-ProfileSection {
+    param([string]$Name)
+    $script:profileTimes[$Name] = [math]::Round($script:profileSectionWatch.Elapsed.TotalMilliseconds, 1)
+    $script:profileSectionWatch.Restart()
+}
+
+# Bump this by hand whenever you make a change worth noting. On the next
+# interactive launch you'll see a one-line diff against the last version you
+# actually ran; unchanged runs stay silent.
+$script:ProfileVersion = '2026.09.24'
 
 # ------------------------------------------------------------------------------
 # 1. UTF-8 Console Encoding
@@ -12,6 +30,8 @@ try {
     $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
     chcp 65001 > $null
 } catch {}
+
+Mark-ProfileSection "1. UTF-8 Console Encoding"
 
 # ------------------------------------------------------------------------------
 # 2. Interactive Banner & Fastfetch (Bypasses non-interactive / redirected runs)
@@ -27,7 +47,25 @@ if (-not [Console]::IsOutputRedirected -and -not [Console]::IsInputRedirected) {
             fastfetch
         }
     }
+
+    # One-line note when $ProfileVersion has changed since the last launch.
+    # Silent when unchanged; never blocks startup on failure.
+    try {
+        $versionStampFile = "$env:USERPROFILE\.config\pwsh\.profile-version"
+        $versionStampDir = Split-Path $versionStampFile
+        if (-not (Test-Path $versionStampDir)) { New-Item -ItemType Directory -Path $versionStampDir -Force | Out-Null }
+        $lastVersion = if (Test-Path $versionStampFile) { (Get-Content $versionStampFile -Raw -ErrorAction SilentlyContinue).Trim() } else { $null }
+        if ($lastVersion -and $lastVersion -ne $script:ProfileVersion) {
+            $esc = [char]27
+            Write-Host "$esc[38;2;250;179;135m[Profile]$esc[0m Updated: $lastVersion -> $script:ProfileVersion"
+        }
+        if ($lastVersion -ne $script:ProfileVersion) {
+            Set-Content -Path $versionStampFile -Value $script:ProfileVersion -Encoding utf8
+        }
+    } catch {}
 }
+
+Mark-ProfileSection "2. Interactive Banner & Fastfetch"
 
 # ------------------------------------------------------------------------------
 # 3. PSReadLine: Keybindings, Predictions & Catppuccin Highlighting
@@ -214,6 +252,8 @@ if (Get-Command docker -ErrorAction SilentlyContinue) {
     }
 }
 
+Mark-ProfileSection "3. PSReadLine + 3.1 Argument Completers"
+
 # ------------------------------------------------------------------------------
 # 4. Prompt: Oh My Posh / Starship / Native Catppuccin Prompt
 # ------------------------------------------------------------------------------
@@ -263,6 +303,8 @@ if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
     }
 }
 
+Mark-ProfileSection "4. Prompt"
+
 # ------------------------------------------------------------------------------
 # 5. Directory Listing & File Inspection
 # ------------------------------------------------------------------------------
@@ -279,6 +321,8 @@ if (Get-Command eza -ErrorAction SilentlyContinue) {
     function l  { Get-ChildItem -Path (if ($args) { $args } else { "." }) | Format-Table Mode, Length, LastWriteTime, Name -AutoSize }
 }
 
+Mark-ProfileSection "5. Directory Listing & File Inspection"
+
 # ------------------------------------------------------------------------------
 # 6. Navigation Shortcuts
 # ------------------------------------------------------------------------------
@@ -293,6 +337,8 @@ function mkcd {
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
     Set-Location $Path
 }
+
+Mark-ProfileSection "6. Navigation Shortcuts"
 
 # ------------------------------------------------------------------------------
 # 7. Developer Utilities & System Helpers
@@ -401,6 +447,34 @@ function venv-activate {
 }
 Set-Alias -Name activate -Value venv-activate -ErrorAction SilentlyContinue
 
+# Auto-activate a venv when you cd into a directory that has one; auto-deactivate
+# when you leave one and land somewhere with no venv of its own. Only checks the
+# CURRENT directory (no parent-folder search), so it stays predictable.
+function Invoke-AutoVenv {
+    $here = (Get-Location).Path
+    $activateScript = @('.venv', 'venv', 'env') |
+        ForEach-Object { Join-Path $here "$_\Scripts\Activate.ps1" } |
+        Where-Object { Test-Path $_ } |
+        Select-Object -First 1
+
+    if ($activateScript) {
+        $venvRoot = Split-Path (Split-Path $activateScript -Parent) -Parent
+        if ($env:VIRTUAL_ENV -ne $venvRoot) {
+            & $activateScript
+            Write-Host "[venv] Activated $(Split-Path $venvRoot -Leaf)" -ForegroundColor DarkGreen
+        }
+    } elseif ($env:VIRTUAL_ENV -and (Get-Command deactivate -ErrorAction SilentlyContinue)) {
+        deactivate
+        Write-Host "[venv] Deactivated" -ForegroundColor DarkGray
+    }
+}
+
+# Override cd (built-in alias for Set-Location) so the check above runs on every move.
+function global:cd {
+    if ($args.Count -eq 0) { Set-Location . } else { Set-Location @args }
+    Invoke-AutoVenv
+}
+
 # Profile management shortcuts
 function Get-ActiveProfilePath {
     if (Test-Path $PROFILE) { return $PROFILE }
@@ -442,6 +516,8 @@ function admin {
     }
 }
 
+Mark-ProfileSection "7. Developer Utilities & System Helpers"
+
 # ------------------------------------------------------------------------------
 # 8. Git Convenience Shortcuts
 # ------------------------------------------------------------------------------
@@ -451,6 +527,7 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     function gaa { git add --all }
     function gc  { git commit @args }
     function gcm { git commit -m "$($args -join ' ')" }  # gcm fix message here: unquoted words now join into one -m message
+    function gcma { git add --all; git commit -m "$($args -join ' ')" }  # stage everything, then commit in one step
     function gp  { git push @args }
     function gpl { git pull @args }
     function gl  { git log --oneline --graph --decorate -n 15 }
@@ -458,6 +535,8 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     function gco { git checkout @args }
     function gb  { git branch @args }
 }
+
+Mark-ProfileSection "8. Git Convenience Shortcuts"
 
 # ------------------------------------------------------------------------------
 # 9. Auto-Correction Engine (Common Typos & CommandNotFoundAction)
@@ -506,6 +585,8 @@ $ExecutionContext.InvokeCommand.CommandNotFoundAction = {
         }
     }
 }
+
+Mark-ProfileSection "9. Auto-Correction Engine"
 
 # ------------------------------------------------------------------------------
 # 10. High-Utility Everyday Tools (killport, bak/unbak, extract, cb/paste)
@@ -633,6 +714,8 @@ function paste {
 Set-Alias -Name pbcopy -Value cb -ErrorAction SilentlyContinue
 Set-Alias -Name pbpaste -Value paste -ErrorAction SilentlyContinue
 
+Mark-ProfileSection "10. High-Utility Everyday Tools"
+
 # ------------------------------------------------------------------------------
 # 11. Smart Directory Navigation (Zoxide with Graceful Fallback)
 # ------------------------------------------------------------------------------
@@ -650,6 +733,8 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
         Write-Host "[zoxide] 'zi' requires zoxide. Install with: winget install ajeetdsouza.zoxide" -ForegroundColor Yellow
     }
 }
+
+Mark-ProfileSection "11. Smart Directory Navigation"
 
 # ------------------------------------------------------------------------------
 # 12. Environment Tool Check & Automated Setup
@@ -694,4 +779,25 @@ function install-tools {
         winget install --id $info.WingetId --source winget --accept-package-agreements --accept-source-agreements
     }
     Write-Host "Installation complete! Restart your terminal or run 'reload' to refresh." -ForegroundColor Green
+}
+
+
+Mark-ProfileSection "12. Environment Tool Check & Automated Setup"
+
+# ------------------------------------------------------------------------------
+# 13. Profile Timing Diagnostic
+# ------------------------------------------------------------------------------
+# Shows how long each numbered section above took to load, in milliseconds.
+function profile-timing {
+    $esc = [char]27
+    Write-Host "`n$esc[38;2;137;220;235m=== Profile Load Timing ===$esc[0m"
+    $total = 0
+    foreach ($name in $script:profileTimes.Keys) {
+        $ms = $script:profileTimes[$name]
+        $total += $ms
+        "{0,8:N1} ms  {1}" -f $ms, $name | Write-Host
+    }
+    Write-Host "$esc[38;2;108;112;134m--------------------------------$esc[0m"
+    "{0,8:N1} ms  Total" -f $total | Write-Host
+    Write-Host ""
 }
