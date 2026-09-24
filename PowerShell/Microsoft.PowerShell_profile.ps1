@@ -98,39 +98,41 @@ if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {
 
         Set-PSReadLineOption -Colors $syntaxColors
 
-        # Pre-seed popular developer commands so Auto-Type can suggest them immediately
-        try {
-            $histFile = (Get-PSReadLineOption).HistorySavePath
-            if ($histFile) {
-                $histDir = Split-Path $histFile
-                if (-not (Test-Path $histDir)) { New-Item -ItemType Directory -Path $histDir -Force | Out-Null }
-                $starterSeeds = @(
-                    'git status',
-                    'git add -A',
-                    'git commit -m "update"',
-                    'git push origin main',
-                    'git pull --rebase',
-                    'git log --oneline -n 10',
-                    'winget upgrade --all',
-                    'winget search',
-                    'uv pip install -r requirements.txt',
-                    'python -m venv .venv',
-                    'npm run dev',
-                    'npm install',
-                    'code .',
-                    'fastfetch -c "$env:USERPROFILE\.config\fastfetch\config.jsonc"'
-                )
-                if (-not (Test-Path $histFile)) {
-                    $starterSeeds | Out-File -FilePath $histFile -Encoding utf8
-                } else {
-                    $existing = Get-Content $histFile -ErrorAction SilentlyContinue
+        # Pre-seed popular developer commands so Auto-Type can suggest them immediately.
+        # OFF by default: writing into your real PSReadLine history file mixes fake
+        # entries into Up-arrow / Ctrl+R recall, which is confusing to undo later.
+        # Set $env:PWSH_SEED_HISTORY = '1' before this profile loads to opt in, and
+        # it only runs once (tracked via a marker file) instead of on every launch.
+        if ($env:PWSH_SEED_HISTORY -eq '1') {
+            try {
+                $histFile = (Get-PSReadLineOption).HistorySavePath
+                $markerFile = Join-Path (Split-Path $histFile) '.seeded'
+                if ($histFile -and -not (Test-Path $markerFile)) {
+                    $histDir = Split-Path $histFile
+                    if (-not (Test-Path $histDir)) { New-Item -ItemType Directory -Path $histDir -Force | Out-Null }
+                    $starterSeeds = @(
+                        'git status',
+                        'git add -A',
+                        'git commit -m "update"',
+                        'git push origin main',
+                        'git pull --rebase',
+                        'git log --oneline -n 10',
+                        'winget upgrade --all',
+                        'winget search',
+                        'uv pip install -r requirements.txt',
+                        'python -m venv .venv',
+                        'npm run dev',
+                        'npm install',
+                        'code .',
+                        'fastfetch -c "$env:USERPROFILE\.config\fastfetch\config.jsonc"'
+                    )
+                    $existing = if (Test-Path $histFile) { Get-Content $histFile -ErrorAction SilentlyContinue } else { @() }
                     $toAdd = $starterSeeds | Where-Object { $_ -notin $existing }
-                    if ($toAdd) {
-                        $toAdd | Out-File -FilePath $histFile -Append -Encoding utf8
-                    }
+                    if ($toAdd) { $toAdd | Out-File -FilePath $histFile -Append -Encoding utf8 }
+                    New-Item -ItemType File -Path $markerFile -Force | Out-Null
                 }
-            }
-        } catch {}
+            } catch {}
+        }
     } catch {}
 }
 
@@ -448,7 +450,7 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     function ga  { git add @args }
     function gaa { git add --all }
     function gc  { git commit @args }
-    function gcm { git commit -m @args }
+    function gcm { git commit -m "$($args -join ' ')" }  # gcm fix message here: unquoted words now join into one -m message
     function gp  { git push @args }
     function gpl { git pull @args }
     function gl  { git log --oneline --graph --decorate -n 15 }
@@ -477,18 +479,16 @@ function coce   { code @args }
 $ExecutionContext.InvokeCommand.CommandNotFoundAction = {
     param($commandName, $eventArgs)
 
+    # Note: typos already covered by a dedicated function above (claer, clr, pyhton,
+    # pythno, npn, coce) are intentionally left out here — PowerShell resolves those
+    # as direct function calls, so CommandNotFoundAction never even fires for them;
+    # keeping duplicate entries in this map would just be dead code.
     $typoMap = @{
         'gti'       = 'git'
         'gut'       = 'git'
         'got'       = 'git'
         'gi'        = 'git'
-        'claer'     = 'clear'
         'clea'      = 'clear'
-        'clr'       = 'clear'
-        'pyhton'    = 'python'
-        'pythno'    = 'python'
-        'npn'       = 'npm'
-        'coce'      = 'code'
         'cdoe'      = 'code'
         'fastfech'  = 'fastfetch'
         'fatsfetch' = 'fastfetch'
@@ -655,33 +655,43 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 # 12. Environment Tool Check & Automated Setup
 # ------------------------------------------------------------------------------
 
+# Command -> real winget package ID, shared by check-tools and install-tools
+# (the display names alone, e.g. "Ripgrep", are not valid `winget install` IDs)
+$script:toolWingetIds = [ordered]@{
+    'Fastfetch'  = @{ Cmd = 'fastfetch'; WingetId = 'Fastfetch-cli.Fastfetch' }
+    'Zoxide'     = @{ Cmd = 'zoxide';    WingetId = 'ajeetdsouza.zoxide' }
+    'Git'        = @{ Cmd = 'git';       WingetId = 'Git.Git' }
+    'Ripgrep'    = @{ Cmd = 'rg';        WingetId = 'BurntSushi.ripgrep.MSVC' }
+    'uv'         = @{ Cmd = 'uv';        WingetId = 'astral-sh.uv' }
+    'btop'       = @{ Cmd = 'btop';      WingetId = 'aristocratos.btop4win' }
+}
+
 # Check status of recommended terminal tools
 function check-tools {
-    $tools = [ordered]@{
-        'Fastfetch'  = 'fastfetch'
-        'Zoxide'     = 'zoxide'
-        'Git'        = 'git'
-        'Ripgrep'    = 'rg'
-        'uv'         = 'uv'
-        'btop'       = 'btop'
-    }
     $esc = [char]27
     Write-Host "`n$esc[38;2;137;220;235m=== Terminal Tools Checklist ===$esc[0m"
-    foreach ($name in $tools.Keys) {
-        $cmd = $tools[$name]
-        if (Get-Command $cmd -ErrorAction SilentlyContinue) {
+    foreach ($name in $script:toolWingetIds.Keys) {
+        $info = $script:toolWingetIds[$name]
+        if (Get-Command $info.Cmd -ErrorAction SilentlyContinue) {
             Write-Host " $esc[38;2;166;227;161m[OK]$esc[0m      $name"
         } else {
-            Write-Host " $esc[38;2;243;139;168m[MISSING]$esc[0m $name (Install: winget install $name)"
+            Write-Host " $esc[38;2;243;139;168m[MISSING]$esc[0m $name (Install: winget install --id $($info.WingetId))"
         }
     }
     Write-Host ""
 }
 
-# Automated one-step installer for core tools
+# Automated one-step installer: installs every tool from check-tools that's missing
 function install-tools {
     Write-Host "Installing recommended terminal utilities via WinGet..." -ForegroundColor Cyan
-    winget install --id Fastfetch-cli.Fastfetch --source winget --accept-package-agreements --accept-source-agreements
-    winget install --id ajeetdsouza.zoxide --source winget --accept-package-agreements --accept-source-agreements
+    foreach ($name in $script:toolWingetIds.Keys) {
+        $info = $script:toolWingetIds[$name]
+        if (Get-Command $info.Cmd -ErrorAction SilentlyContinue) {
+            Write-Host "  $name already installed, skipping." -ForegroundColor DarkGray
+            continue
+        }
+        Write-Host "  Installing $name ($($info.WingetId))..." -ForegroundColor Cyan
+        winget install --id $info.WingetId --source winget --accept-package-agreements --accept-source-agreements
+    }
     Write-Host "Installation complete! Restart your terminal or run 'reload' to refresh." -ForegroundColor Green
 }
